@@ -18,6 +18,8 @@ profile
 DerivedData
 *.hmap
 *.ipa
+Example/Pods
+Example/Podfile.lock
 
 # Bundler
 .bundle

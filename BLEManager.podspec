@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = 'BLEManager'
-  s.version          = '0.1.0'
-  s.summary          = 'A short description of BLEManager.'
+  s.version          = '0.0.1'
+  s.summary          = 'iOS BLE Manager.'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -27,7 +27,7 @@ TODO: Add long description of the pod here.
   s.author           = { 'richiezhl' => 'lylaut@163.com' }
   s.source           = { :git => 'https://github.com/richiezhl/BLEManager.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
-
+  s.header_dir = 'BLEManager'
   s.ios.deployment_target = '9.0'
 
   s.source_files = 'BLEManager/Classes/**/*'
@@ -36,7 +36,5 @@ TODO: Add long description of the pod here.
   #   'BLEManager' => ['BLEManager/Assets/*.png']
   # }
 
-  # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+  s.frameworks = 'CoreBluetooth'
 end
