@@ -15,12 +15,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) NSTimeInterval reconnectTimeInterval;
 
-@property (nonatomic, strong) CBCharacteristic *defaultReadCharacteristic;
+/// devices need to be removed
+@property (nonatomic, assign) BOOL willBeRemoved;
 
-@property (nonatomic, strong) CBCharacteristic *defaultWriteCharacteristic;
+@property (nonatomic, strong, nullable) CBCharacteristic *defaultReadCharacteristic;
 
-@property (nonatomic, copy) void (^serviceAvaliableBlock)(CBPeripheral *peripheral, BOOL avaliable);
-@property (nonatomic, copy) void (^readResponseBlock)(NSData *data);
+@property (nonatomic, strong, nullable) CBCharacteristic *defaultWriteCharacteristic;
+
+@property (nonatomic, copy, nullable) void (^serviceAvaliableBlock)(CBPeripheral *peripheral, BOOL avaliable);
+@property (nonatomic, copy, nullable) void (^unConnectBlock)(CBPeripheral *peripheral, BOOL success);
+@property (nonatomic, copy, nullable) void (^readResponseBlock)(NSData *data);
 
 - (void)readData;
 
@@ -62,8 +66,8 @@ typedef NS_ENUM(NSInteger, BLEManagerChannel) {
 /// scan characteristic filter
 @property (nonatomic, copy) NSArray<CBUUID *> *filteredCharacteristic;
 
-/// all connected devices
-@property (nonatomic, strong) NSMutableDictionary<NSString *, CBPeripheral *> *connectedPeripheralMaps;
+/// all paried devices
+@property (nonatomic, strong) NSMutableDictionary<NSString *, CBPeripheral *> *pariedPeripheralMaps;
 
 + (instancetype)sharedManager;
 
@@ -76,6 +80,8 @@ typedef NS_ENUM(NSInteger, BLEManagerChannel) {
 - (void)connectToPeripheral:(CBPeripheral *)peripheral;
 
 - (void)unconnectToPeripheral:(CBPeripheral *)peripheral;
+
+- (void)removeConnectedPeripheral:(CBPeripheral *)peripheral;
 
 - (void)unconnectAllConnectedPerpheral;
 

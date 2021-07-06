@@ -10,9 +10,11 @@
 #import <objc/runtime.h>
 
 static void *CBPeripheralReconnectTimeIntervalKey = &CBPeripheralReconnectTimeIntervalKey;
+static void *CBPeripheralWillBeRemovedKey = &CBPeripheralWillBeRemovedKey;
 static void *CBPeripheralDefaultReadCharacteristicKey = &CBPeripheralDefaultReadCharacteristicKey;
 static void *CBPeripheralDefaultWriteCharacteristicKey = &CBPeripheralDefaultWriteCharacteristicKey;
 static void *CBPeripheralServiceAvaliableBlockKey = &CBPeripheralServiceAvaliableBlockKey;
+static void *CBPeripheralUnConnectBlockKey = &CBPeripheralUnConnectBlockKey;
 static void *CBPeripheralReadReponseBlockKey = &CBPeripheralReadReponseBlockKey;
 
 @implementation CBPeripheral (BLEManager_Extra)
@@ -27,6 +29,18 @@ static void *CBPeripheralReadReponseBlockKey = &CBPeripheralReadReponseBlockKey;
         return [number doubleValue];
     }
     return 0;
+}
+
+- (void)setWillBeRemoved:(BOOL)removed {
+    objc_setAssociatedObject(self, CBPeripheralWillBeRemovedKey, @(removed), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (BOOL)willBeRemoved {
+    NSNumber *number = objc_getAssociatedObject(self, CBPeripheralWillBeRemovedKey);
+    if ([number isKindOfClass:[NSNumber class]]) {
+        return [number boolValue];
+    }
+    return NO;
 }
 
 - (void)setDefaultReadCharacteristic:(CBCharacteristic *)defaultReadCharacteristic {
@@ -53,6 +67,14 @@ static void *CBPeripheralReadReponseBlockKey = &CBPeripheralReadReponseBlockKey;
     return objc_getAssociatedObject(self, CBPeripheralServiceAvaliableBlockKey);
 }
 
+- (void)setUnConnectBlock:(void (^)(CBPeripheral * _Nonnull, BOOL))unConnectBlock {
+    objc_setAssociatedObject(self, CBPeripheralUnConnectBlockKey, unConnectBlock, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (void (^)(CBPeripheral * _Nonnull, BOOL))unConnectBlock {
+    return objc_getAssociatedObject(self, CBPeripheralUnConnectBlockKey);
+}
+
 - (void)setReadResponseBlock:(void (^)(NSData * _Nonnull))readResponseBlock {
     objc_setAssociatedObject(self, CBPeripheralReadReponseBlockKey, readResponseBlock, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
@@ -73,7 +95,6 @@ static void *CBPeripheralReadReponseBlockKey = &CBPeripheralReadReponseBlockKey;
             return;
         }
         NSLog(@"unavaliable peripheral");
-        [[BLEManager sharedManager].connectedPeripheralMaps removeObjectForKey:self.identifier.UUIDString];
         [self reconnect];
         return;
     }
@@ -93,7 +114,6 @@ static void *CBPeripheralReadReponseBlockKey = &CBPeripheralReadReponseBlockKey;
             return;
         }
         NSLog(@"unavaliable peripheral");
-        [[BLEManager sharedManager].connectedPeripheralMaps removeObjectForKey:self.identifier.UUIDString];
         [self reconnect];
         return;
     }
@@ -104,7 +124,6 @@ static void *CBPeripheralReadReponseBlockKey = &CBPeripheralReadReponseBlockKey;
 - (void)sendDataWithoutResponse:(NSData *)data {
     if (self.defaultWriteCharacteristic == nil) {
         NSLog(@"No avaliable write port to write");
-        [[BLEManager sharedManager].connectedPeripheralMaps removeObjectForKey:self.identifier.UUIDString];
         [self reconnect];
         return;
     }
@@ -116,7 +135,6 @@ static void *CBPeripheralReadReponseBlockKey = &CBPeripheralReadReponseBlockKey;
             return;
         }
         NSLog(@"unavaliable peripheral");
-        [[BLEManager sharedManager].connectedPeripheralMaps removeObjectForKey:self.identifier.UUIDString];
         [self reconnect];
         return;
     }
@@ -177,12 +195,12 @@ static BLEManager *bleManager = nil;
     return self.peripheralMaps.allValues;
 }
 
-- (NSMutableDictionary<NSString *,CBPeripheral *> *)connectedPeripheralMaps {
-    if (_connectedPeripheralMaps == nil) {
-        _connectedPeripheralMaps = [NSMutableDictionary dictionary];
+- (NSMutableDictionary<NSString *,CBPeripheral *> *)pariedPeripheralMaps {
+    if (_pariedPeripheralMaps == nil) {
+        _pariedPeripheralMaps = [NSMutableDictionary dictionary];
     }
     
-    return _connectedPeripheralMaps;
+    return _pariedPeripheralMaps;
 }
 
 - (instancetype)init {
@@ -209,6 +227,17 @@ static BLEManager *bleManager = nil;
 #pragma mark - public methods
 - (void)scanWithTimeout:(NSTimeInterval)timeout {
     @synchronized (self) {
+        if (self.centralManager.state == CBManagerStateUnsupported) {
+            if (self.delegate) {
+                [self.delegate bleManagerUnsupported];
+            }
+            initalCompelte = YES;
+            return;
+        } else if (self.centralManager.state == CBManagerStatePoweredOff) {
+            if (self.delegate) {
+                [self.delegate bleManagerPowerOff];
+            }
+        }
         if (!initalCompelte) {
             needsInitalScan = YES;
             scanTimeout = timeout;
@@ -251,6 +280,9 @@ static BLEManager *bleManager = nil;
 }
 
 - (void)connectToPeripheral:(CBPeripheral *)peripheral {
+    if (peripheral.state == CBPeripheralStateConnected) {
+        return;
+    }
     [self.centralManager connectPeripheral:peripheral options:nil];
 }
 
@@ -258,14 +290,19 @@ static BLEManager *bleManager = nil;
     [self cleanupWithPeripheral:peripheral];
 }
 
+- (void)removeConnectedPeripheral:(CBPeripheral *)peripheral {
+    peripheral.willBeRemoved = YES;
+    [self cleanupWithPeripheral:peripheral];
+}
+
 - (void)unconnectAllConnectedPerpheral {
     @synchronized (self.centralManager) {
         __weak typeof(self) weakSelf = self;
-        [self.connectedPeripheralMaps enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, CBPeripheral * _Nonnull periperal, BOOL * _Nonnull stop) {
+        [self.pariedPeripheralMaps enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, CBPeripheral * _Nonnull periperal, BOOL * _Nonnull stop) {
             __strong typeof(weakSelf) strongSelf = weakSelf;
             [strongSelf cleanupWithPeripheral:periperal];
         }];
-        [self.connectedPeripheralMaps removeAllObjects];
+        [self.pariedPeripheralMaps removeAllObjects];
     }
 }
 
@@ -291,6 +328,9 @@ static BLEManager *bleManager = nil;
             }
         }
     }
+    
+    peripheral.defaultReadCharacteristic = nil;
+    peripheral.defaultWriteCharacteristic = nil;
     
     // If we've got this far, we're connected, but we're not subscribed, so we just disconnect
     [self.centralManager cancelPeripheralConnection:peripheral];
@@ -355,7 +395,7 @@ static BLEManager *bleManager = nil;
 
     // Make sure we get the discovery callbacks
     @synchronized (central) {
-        self.connectedPeripheralMaps[peripheral.identifier.UUIDString] = peripheral;
+        self.pariedPeripheralMaps[peripheral.identifier.UUIDString] = peripheral;
     }
     
     peripheral.reconnectTimeInterval = 0;
@@ -466,9 +506,25 @@ static BLEManager *bleManager = nil;
 /** Once the disconnection happens, we need to clean up our local copy of the peripheral
  */
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
+    if (error) {
+        NSLog(@"Peripheral Disconnected failed");
+        
+        if (peripheral.unConnectBlock) {
+            peripheral.unConnectBlock(peripheral, NO);
+        }
+        return;
+    }
     NSLog(@"Peripheral Disconnected");
     
-    [self.peripheralMaps removeObjectForKey:peripheral.identifier.UUIDString];
+    if (peripheral.unConnectBlock) {
+        peripheral.unConnectBlock(peripheral, YES);
+    }
+    
+    if (peripheral.willBeRemoved) {
+        @synchronized (self.centralManager) {
+            [self.pariedPeripheralMaps removeObjectForKey:peripheral.identifier.UUIDString];
+        }
+    }
 }
 
 @end
