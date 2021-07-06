@@ -7,7 +7,7 @@
 #
 
 Pod::Spec.new do |s|
-  s.name             = 'BLEManager'
+  s.name             = 'ZLBLEManager'
   s.version          = '0.0.1'
   s.summary          = 'iOS BLE Manager.'
 

@@ -37,11 +37,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		031A8909F8205013A66ABC39 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
+		031A8909F8205013A66ABC39 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		042208DCD93B89679EB486C7 /* Pods_BLEManager_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BLEManager_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2881ED81DF025F750DC70B09 /* Pods_BLEManager_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BLEManager_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		53FBA5274914B4B10B2FEF7A /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; name = README.md; path = ../README.md; sourceTree = "<group>"; };
-		55BD5ACEA29FDF274343CE43 /* BLEManager.podspec */ = {isa = PBXFileReference; includeInIndex = 1; name = BLEManager.podspec; path = ../BLEManager.podspec; sourceTree = "<group>"; };
+		53FBA5274914B4B10B2FEF7A /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		55BD5ACEA29FDF274343CE43 /* ZLBLEManager.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = ZLBLEManager.podspec; path = ../ZLBLEManager.podspec; sourceTree = "<group>"; };
 		6003F58A195388D20070C39A /* BLEManager_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BLEManager_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58D195388D20070C39A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6003F58F195388D20070C39A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -178,7 +178,7 @@
 		60FF7A9C1954A5C5007DD14C /* Podspec Metadata */ = {
 			isa = PBXGroup;
 			children = (
-				55BD5ACEA29FDF274343CE43 /* BLEManager.podspec */,
+				55BD5ACEA29FDF274343CE43 /* ZLBLEManager.podspec */,
 				53FBA5274914B4B10B2FEF7A /* README.md */,
 				031A8909F8205013A66ABC39 /* LICENSE */,
 			);
@@ -193,7 +193,6 @@
 				6EB5AF94086BC4C69F66F052 /* Pods-BLEManager_Tests.debug.xcconfig */,
 				AB351AF9EF77ACAF490A7F19 /* Pods-BLEManager_Tests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -258,6 +257,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
