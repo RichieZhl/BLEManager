@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBPeripheral (BLEManager_Extra)
 
+/// reconnect timeout
 @property (nonatomic, assign) NSTimeInterval reconnectTimeInterval;
 
 /// devices need to be removed
@@ -22,8 +23,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong, nullable) CBCharacteristic *defaultWriteCharacteristic;
 
-@property (nonatomic, copy, nullable) void (^serviceAvaliableBlock)(CBPeripheral *peripheral, BOOL avaliable);
+@property (nonatomic, strong, nullable) CBCharacteristic *defaultWriteWithoutResponseCharacteristic;
+
+@property (nonatomic, copy, nullable) void (^connectBlock)(CBPeripheral *peripheral, BOOL success);
 @property (nonatomic, copy, nullable) void (^unConnectBlock)(CBPeripheral *peripheral, BOOL success);
+@property (nonatomic, copy, nullable) void (^removeFromPariedDevicesBlock)(CBPeripheral *peripheral, BOOL success);
 @property (nonatomic, copy, nullable) void (^readResponseBlock)(NSData *data);
 
 - (void)readData;
@@ -35,27 +39,18 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @protocol BLEManagerDelegate <NSObject>
-
+/// device unsupported ble
 - (void)bleManagerUnsupported;
-
+/// device power off
 - (void)bleManagerPowerOff;
-
+/// device scan end
 - (void)bleManagerDidScanEnd;
 
 @end
 
-typedef NS_ENUM(NSInteger, BLEManagerChannel) {
-    BLEManagerChannelWriteOnly = 0, // default
-    BLEManagerChannelReadOnly = 1,
-    BLEManagerChannelReadAndWrite = 2
-};
-
 @interface BLEManager : NSObject
 
 @property (nonatomic, weak) id<BLEManagerDelegate> delegate;
-
-/// devices must has the channel to be recognized as service avaliable
-@property (nonatomic, assign) BLEManagerChannel needChannel;
 
 /// all not filtered devices
 @property (nonatomic, copy, readonly) NSArray<CBPeripheral *> *peripherals;
@@ -73,6 +68,8 @@ typedef NS_ENUM(NSInteger, BLEManagerChannel) {
 
 - (instancetype)init NS_UNAVAILABLE;
 
+- (BOOL)savePariedPeripheral;
+
 - (void)scanWithTimeout:(NSTimeInterval)timeout;
 
 - (void)stopScan;
@@ -83,7 +80,7 @@ typedef NS_ENUM(NSInteger, BLEManagerChannel) {
 
 - (void)removeConnectedPeripheral:(CBPeripheral *)peripheral;
 
-- (void)unconnectAllConnectedPerpheral;
+- (void)removeAllConnectedPeripheral;
 
 @end
 
